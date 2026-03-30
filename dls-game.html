@@ -2,41 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dream League Soccer Game</title>
+    <title>Physics-Based 2D Football Game</title>
+    <style>
+        canvas {
+            background: green;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to Dream League Soccer Game</h1>
-    <p>Created by Wild Studios</p>
+    <h1>Physics-Based 2D Football Game</h1>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
-    <h2>Team Setup</h2>
-    <p>Choose your team and set your players.</p>
-    <h3>Your Team</h3>
-    <ul>
-        <li>Goalkeeper: Player1</li>
-        <li>Defender: Player2</li>
-        <li>Midfielder: Player3</li>
-        <li>Forward: Player4</li>
-    </ul>
+        // Game variables
+        let ball = { x: 400, y: 200, radius: 10, vx: 0, vy: 0 };
+        let players = [
+            { x: 100, y: 200, width: 20, height: 20, controls: { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight' } },
+            { x: 700, y: 200, width: 20, height: 20, controls: { up: 'w', down: 's', left: 'a', right: 'd' } }
+        ];
 
-    <h2>Match Schedule</h2>
-    <p>Upcoming Matches:</p>
-    <ul>
-        <li>Match 1: Team A vs Team B</li>
-        <li>Match 2: Team C vs Team D</li>
-    </ul>
+        let score = { player1: 0, player2: 0 };
 
-    <h2>Stats Tracking</h2>
-    <p>Current Stats:</p>
-    <ul>
-        <li>Wins: 0</li>
-        <li>Losses: 0</li>
-        <li>Draws: 0</li>
-    </ul>
+        // Initialize game
+        function init() {
+            document.addEventListener('keydown', controlPlayer);
+            requestAnimationFrame(gameLoop);
+        }
 
-    <footer>
-        <p>Made by Wild Studios</p>
-    </footer>
+        // Control player movements
+        function controlPlayer(event) {
+            players.forEach((player, index) => {
+                switch (event.key) {
+                    case player.controls.up:
+                        player.y -= 5;
+                        break;
+                    case player.controls.down:
+                        player.y += 5;
+                        break;
+                    case player.controls.left:
+                        player.x -= 5;
+                        break;
+                    case player.controls.right:
+                        player.x += 5;
+                        break;
+                }
+            });
+        }
+
+        // Update game elements
+        function update() {
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            // Ball physics
+            ball.vy += 0.2; // gravity
+
+            // Check ball collision with players
+            players.forEach(player => {
+                if (ball.x < player.x + player.width &&
+                    ball.x + ball.radius > player.x &&
+                    ball.y < player.y + player.height &&
+                    ball.y + ball.radius > player.y) {
+                    ball.vx = Math.random() < 0.5 ? -5 : 5;
+                    ball.vy = -5;
+                }
+            });
+
+            // Check scoring
+            if (ball.x < 0) {
+                score.player2 += 1;
+                resetBall();
+            } else if (ball.x > canvas.width) {
+                score.player1 += 1;
+                resetBall();
+            }
+        }
+
+        // Reset ball position
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.vx = 0;
+            ball.vy = 0;
+        }
+
+        // Render game elements
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(ball.x - ball.radius, ball.y - ball.radius, ball.radius * 2, ball.radius * 2);
+
+            players.forEach(player => {
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            });
+
+            // Display score
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Player 1: ${score.player1}`, 50, 30);
+            ctx.fillText(`Player 2: ${score.player2}`, canvas.width - 150, 30);
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the game
+        init();
+    </script>
 </body>
 </html>
