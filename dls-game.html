@@ -1,1 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream League Soccer 3D - Made by Wild Studios</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+        }
+        #gameContainer { width: 100vw; height: 100vh; }
+        #canvas { display: block; }
+        .menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 26, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .menu.hidden { display: none; }
+        .menu h1 {
+            font-size: 3em;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        .menu p { color: #ffd700; margin-bottom: 30px; font-size: 1.2em; }
+        .menu-content {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 10px;
+            border: 2px solid #00d4ff;
+            max-width: 500px;
+            text-align: center;
+        }
+        .input-group {
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .input-group label {
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            color: white;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .input-group select option { background: #1a1a1a; }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: black;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffd700;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        .hud-team {
+            text-align: center;
+            flex: 1;
+        }
+        .hud-score {
+            font-size: 2.5em;
+            color: #ffd700;
+            font-weight: bold;
+            margin: 0 30px;
+        }
+        .hud-time {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #00d4ff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.5em;
+            z-index: 100;
+        }
+        .end-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            display: none;
+        }
+        .end-screen.show { display: flex; }
+        .end-screen h1 {
+            font-size: 3em;
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+        .end-screen p { font-size: 1.5em; color: #ffd700; margin: 10px; }
+        .end-screen button {
+            margin-top: 30px;
+            padding: 15px 40px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer"></div>
 
+    <!-- Menu -->
+    <div id="mainMenu" class="menu">
+        <h1>⚽ DREAM LEAGUE SOCCER 3D ⚽</h1>
+        <p>Made by Wild Studios</p>
+        <div class="menu-content">
+            <div class="input-group">
+                <label>Team Name:</label>
+                <input type="text" id="teamName" placeholder="Enter your team name" value="Dream FC">
+            </div>
+            <div class="input-group">
+                <label>Formation:</label>
+                <select id="formation">
+                    <option value="4-3-3">4-3-3 (Balanced)</option>
+                    <option value="3-5-2">3-5-2 (Attacking)</option>
+                    <option value="5-3-2">5-3-2 (Defensive)</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Difficulty:</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <div class="button-group">
+                <button onclick="startGame()">START MATCH</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud" class="hud" style="display: none;">
+        <div class="hud-team">
+            <div id="team1Name" style="color: #00d4ff;">Your Team</div>
+            <div style="font-size: 1.2em;">⚽</div>
+        </div>
+        <div class="hud-score">
+            <span id="score1">0</span> - <span id="score2">0</span>
+        </div>
+        <div class="hud-team">
+            <div id="team2Name" style="color: #ff6b6b;">Opponent</div>
+            <div style="font-size: 1.2em;">⚽</div>
+        </div>
+    </div>
+
+    <div id="timeDisplay" class="hud-time" style="display: none;">
+        <span id="matchTime">0:00</span>
+    </div>
+
+    <!-- End Screen -->
+    <div id="endScreen" class="end-screen">
+        <h1 id="endTitle">MATCH COMPLETE!</h1>
+        <p id="endScore">Final Score: 0 - 0</p>
+        <p id="endResult">Result: Draw!</p>
+        <button onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Game variables
+        let scene, camera, renderer;
+        let gameState = {
+            teamName: 'Dream FC',
+            formation: '4-3-3',
+            difficulty: 'medium',
+            score1: 0,
+            score2: 0,
+            matchTime: 0,
+            matchDuration: 90,
+            gameActive: false
+        };
+
+        let players = [];
+        let ball = null;
+        let aiUpdateCounter = 0;
+
+        function startGame() {
+            gameState.teamName = document.getElementById('teamName').value;
+            gameState.formation = document.getElementById('formation').value;
+            gameState.difficulty = document.getElementById('difficulty').value;
+
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('hud').style.display = 'flex';
+            document.getElementById('timeDisplay').style.display = 'block';
+            document.getElementById('team1Name').textContent = gameState.teamName;
+            document.getElementById('team2Name').textContent = 'AI Opponent';
+
+            initGame();
+            gameState.gameActive = true;
+            animate();
+        }
+
+        function initGame() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+            scene.fog = new THREE.Fog(0x87ceeb, 500, 1000);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            camera.position.set(0, 30, 50);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+            document.getElementById('gameContainer').appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(50, 100, 50);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.left = -150;
+            directionalLight.shadow.camera.right = 150;
+            directionalLight.shadow.camera.top = 150;
+            directionalLight.shadow.camera.bottom = -150;
+            scene.add(directionalLight);
+
+            // Create pitch
+            createPitch();
+
+            // Create ball
+            createBall();
+
+            // Create players
+            createPlayers();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function createPitch() {
+            const pitchGeometry = new THREE.PlaneGeometry(100, 60);
+            const pitchMaterial = new THREE.MeshLambertMaterial({ color: 0x2d8a2d });
+            const pitch = new THREE.Mesh(pitchGeometry, pitchMaterial);
+            pitch.receiveShadow = true;
+            pitch.rotation.x = -Math.PI / 2;
+            scene.add(pitch);
+
+            // Field lines
+            const linesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+
+            // Halfway line
+            const halfwayGeometry = new THREE.BufferGeometry();
+            halfwayGeometry.setAttribute('position', new THREE.BufferAttribute(
+                new Float32Array([0, 0, -30, 0, 0, 30]), 3
+            ));
+            const halfwayLine = new THREE.Line(halfwayGeometry, linesMaterial);
+            scene.add(halfwayLine);
+
+            // Center circle
+            const circleGeometry = new THREE.BufferGeometry();
+            const points = [];
+            for (let i = 0; i <= 32; i++) {
+                points.push(
+                    Math.cos((i / 32) * Math.PI * 2) * 8,
+                    0.01,
+                    Math.sin((i / 32) * Math.PI * 2) * 8
+                );
+            }
+            circleGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(points), 3));
+            const centerCircle = new THREE.Line(circleGeometry, linesMaterial);
+            scene.add(centerCircle);
+        }
+
+        function createBall() {
+            const ballGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const ballMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball.castShadow = true;
+            ball.receiveShadow = true;
+            ball.position.y = 1;
+            ball.velocity = new THREE.Vector3(0, 0, 0);
+            ball.friction = 0.98;
+            scene.add(ball);
+        }
+
+        function createPlayers() {
+            players = [];
+
+            // Team 1 (Player's team) - Blue
+            const positions1 = [
+                { x: -40, z: 0 },      // Goalkeeper
+                { x: -25, z: -15 },    // Defender 1
+                { x: -25, z: 0 },      // Defender 2
+                { x: -25, z: 15 },     // Defender 3
+                { x: -5, z: -10 },     // Midfielder 1
+                { x: -5, z: 0 },       // Midfielder 2
+                { x: -5, z: 10 },      // Midfielder 3
+                { x: 15, z: -10 },     // Forward 1
+                { x: 15, z: 10 }       // Forward 2
+            ];
+
+            positions1.forEach((pos, i) => {
+                const player = createPlayerMesh(0x00d4ff, pos.x, pos.z, 0);
+                players.push({
+                    mesh: player,
+                    team: 0,
+                    position: new THREE.Vector3(pos.x, 0, pos.z),
+                    velocity: new THREE.Vector3(0, 0, 0),
+                    speed: i === 0 ? 0.3 : 0.4,
+                    index: i,
+                    targetPosition: new THREE.Vector3(pos.x, 0, pos.z),
+                    originalPosition: new THREE.Vector3(pos.x, 0, pos.z)
+                });
+                scene.add(player);
+            });
+
+            // Team 2 (AI Opponent) - Red
+            const positions2 = [
+                { x: 40, z: 0 },
+                { x: 25, z: -15 },
+                { x: 25, z: 0 },
+                { x: 25, z: 15 },
+                { x: 5, z: -10 },
+                { x: 5, z: 0 },
+                { x: 5, z: 10 },
+                { x: -15, z: -10 },
+                { x: -15, z: 10 }
+            ];
+
+            positions2.forEach((pos, i) => {
+                const player = createPlayerMesh(0xff6b6b, pos.x, pos.z, 1);
+                players.push({
+                    mesh: player,
+                    team: 1,
+                    position: new THREE.Vector3(pos.x, 0, pos.z),
+                    velocity: new THREE.Vector3(0, 0, 0),
+                    speed: i === 0 ? 0.3 : 0.4,
+                    index: i,
+                    targetPosition: new THREE.Vector3(pos.x, 0, pos.z),
+                    originalPosition: new THREE.Vector3(pos.x, 0, pos.z)
+                });
+                scene.add(player);
+            });
+        }
+
+        function createPlayerMesh(color, x, z, team) {
+            const group = new THREE.Group();
+
+            // Body
+            const bodyGeometry = new THREE.CapsuleGeometry(0.4, 1.5, 4, 8);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: color });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.castShadow = true;
+            body.receiveShadow = true;
+            body.position.y = 1;
+            group.add(body);
+
+            // Head
+            const headGeometry = new THREE.SphereGeometry(0.35, 32, 32);
+            const headMaterial = new THREE.MeshPhongMaterial({ color: 0xfdb4b3 });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.castShadow = true;
+            head.receiveShadow = true;
+            head.position.y = 2.3;
+            group.add(head);
+
+            group.position.set(x, 0, z);
+            return group;
+        }
+
+        function updateGame() {
+            if (!gameState.gameActive) return;
+
+            // Update time
+            gameState.matchTime += 1 / 60;
+            const minutes = Math.floor(gameState.matchTime / 60);
+            const seconds = Math.floor(gameState.matchTime % 60);
+            document.getElementById('matchTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            if (gameState.matchTime > gameState.matchDuration * 60) {
+                endMatch();
+                return;
+            }
+
+            // Ball physics
+            ball.velocity.y -= 0.01; // Gravity
+            ball.position.add(ball.velocity);
+            ball.velocity.multiplyScalar(ball.friction);
+
+            // Ball boundaries
+            if (ball.position.z > 30) {
+                ball.position.z = 30;
+                ball.velocity.z *= -0.8;
+            }
+            if (ball.position.z < -30) {
+                ball.position.z = -30;
+                ball.velocity.z *= -0.8;
+            }
+            if (ball.position.x > 50) {
+                ball.position.x = 50;
+                ball.velocity.x *= -0.8;
+            }
+            if (ball.position.x < -50) {
+                ball.position.x = -50;
+                ball.velocity.x *= -0.8;
+            }
+
+            // Goal detection
+            if (ball.position.x > 48 && ball.position.z > -10 && ball.position.z < 10) {
+                gameState.score1++;
+                resetBall();
+            }
+            if (ball.position.x < -48 && ball.position.z > -10 && ball.position.z < 10) {
+                gameState.score2++;
+                resetBall();
+            }
+
+            // Update score display
+            document.getElementById('score1').textContent = gameState.score1;
+            document.getElementById('score2').textContent = gameState.score2;
+
+            // Update players
+            players.forEach((player, i) => {
+                if (player.team === 0) {
+                    // Player team - basic AI
+                    player.targetPosition.copy(ball.position);
+                    const diff = player.targetPosition.clone().sub(player.position);
+                    if (diff.length() > 0.1) {
+                        diff.normalize().multiplyScalar(player.speed);
+                        player.velocity.copy(diff);
+                    }
+                } else {
+                    // Opponent team - AI
+                    if (Math.random() > 0.95) {
+                        player.targetPosition.x = -40 + Math.random() * 80;
+                        player.targetPosition.z = -25 + Math.random() * 50;
+                    }
+                    const diff = player.targetPosition.clone().sub(player.position);
+                    if (diff.length() > 0.1) {
+                        diff.normalize().multiplyScalar(player.speed);
+                        player.velocity.copy(diff);
+                    }
+                }
+
+                player.position.add(player.velocity);
+                player.mesh.position.copy(player.position);
+
+                // Ball collision with players
+                const dist = player.position.distanceTo(ball.position);
+                if (dist < 1.5) {
+                    const dir = ball.position.clone().sub(player.position).normalize();
+                    ball.velocity.copy(dir.multiplyScalar(0.3));
+                }
+            });
+        }
+
+        function resetBall() {
+            ball.position.set(0, 1, 0);
+            ball.velocity.set(0, 0, 0);
+        }
+
+        function endMatch() {
+            gameState.gameActive = false;
+            const endScreen = document.getElementById('endScreen');
+            const endTitle = document.getElementById('endTitle');
+            const endScore = document.getElementById('endScore');
+            const endResult = document.getElementById('endResult');
+
+            endScore.textContent = `Final Score: ${gameState.score1} - ${gameState.score2}`;
+
+            if (gameState.score1 > gameState.score2) {
+                endTitle.textContent = '🎉 YOU WIN! 🎉';
+                endTitle.style.color = '#00ff00';
+                endResult.textContent = `${gameState.teamName} VICTORIOUS!`;
+            } else if (gameState.score2 > gameState.score1) {
+                endTitle.textContent = '😢 YOU LOST 😢';
+                endTitle.style.color = '#ff0000';
+                endResult.textContent = 'Opponent wins! Better luck next time!';
+            } else {
+                endTitle.textContent = '🤝 DRAW! 🤝';
+                endTitle.style.color = '#ffd700';
+                endResult.textContent = 'A hard-fought match!';
+            }
+
+            endScreen.classList.add('show');
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateGame();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+    </script>
+</body>
+</html>
