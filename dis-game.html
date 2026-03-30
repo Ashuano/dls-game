@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream League Soccer - Text Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        .header p {
+            color: #ffd700;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .game-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #00d4ff;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            min-height: 250px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .game-content h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .game-content p, .game-content label {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-size: 1em;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            background: rgba(0, 212, 255, 0.1);
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .input-group select option {
+            background: #1e3c72;
+            color: #fff;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            color: #000;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            color: #ffd700;
+            font-size: 0.8em;
+        }
+
+        .stat-value {
+            color: #00d4ff;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .match-log {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid #ffd700;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 0.95em;
+        }
+
+        .match-log.win {
+            border-left-color: #00ff00;
+        }
+
+        .match-log.loss {
+            border-left-color: #ff0000;
+        }
+
+        .match-log.draw {
+            border-left-color: #ffd700;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #ffd700;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ DREAM LEAGUE SOCCER ⚽</h1>
+            <p>Made by Wild Studios</p>
+        </div>
+
+        <div class="game-content" id="gameContent">
+            <h2>Welcome to Dream League Soccer!</h2>
+            <p>Build your dream team and lead them to glory! Let's start by setting up your team.</p>
+            <p style="margin-top: 20px; color: #ffd700;">Enter your team details below:</p>
+        </div>
+
+        <div id="setupPhase">
+            <div class="input-group">
+                <label for="teamName">Team Name:</label>
+                <input type="text" id="teamName" placeholder="e.g., Manchester United">
+            </div>
+
+            <div class="input-group">
+                <label for="goalie">Choose Your Goalie:</label>
+                <select id="goalie">
+                    <option value="">Select a Goalie...</option>
+                    <option value="Manuel Neuer">Manuel Neuer (Elite Reflexes)</option>
+                    <option value="Gianluigi Donnarumma">Gianluigi Donnarumma (Quick Learner)</option>
+                    <option value="Alisson">Alisson (Distribution Expert)</option>
+                    <option value="Thibaut Courtois">Thibaut Courtois (Big Game Player)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="captain">Choose Your Captain:</label>
+                <select id="captain">
+                    <option value="">Select a Captain...</option>
+                    <option value="Cristiano Ronaldo">Cristiano Ronaldo (Lethal Striker)</option>
+                    <option value="Kylian Mbappé">Kylian Mbappé (Speed Demon)</option>
+                    <option value="Luka Modrić">Luka Modrić (Midfield Maestro)</option>
+                    <option value="Sergio Ramos">Sergio Ramos (Defensive Wall)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="coach">Choose Your Coach:</label>
+                <select id="coach">
+                    <option value="">Select a Coach...</option>
+                    <option value="Carlo Ancelotti">Carlo Ancelotti (Tactical Genius)</option>
+                    <option value="Pep Guardiola">Pep Guardiola (Possession Master)</option>
+                    <option value="Luis Enrique">Luis Enrique (Attacking Specialist)</option>
+                    <option value="Antonio Conte">Antonio Conte (Defensive Mastermind)</option>
+                </select>
+            </div>
+
+            <div class="buttons">
+                <button onclick="startGame()">START GAME</button>
+            </div>
+        </div>
+
+        <div id="gamePhase" style="display: none;">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Team</div>
+                    <div class="stat-value" id="displayTeam">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Record (W/L/D)</div>
+                    <div class="stat-value" id="displayRecord">0/0/0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Goals</div>
+                    <div class="stat-value" id="displayGoals">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Rank</div>
+                    <div class="stat-value" id="displayRank">20th</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <div class="buttons">
+                    <button onclick="playMatch()">PLAY MATCH</button>
+                    <button onclick="viewTeam()">VIEW TEAM</button>
+                    <button onclick="resetGame()">NEW GAME</button>
+                </div>
+            </div>
+
+            <div id="matchLog" style="margin-top: 20px;"></div>
+        </div>
+
+        <div class="footer">
+            🎮 Made by Wild Studios 🎮
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            teamName: '',
+            goalie: '',
+            captain: '',
+            coach: '',
+            wins: 0,
+            losses: 0,
+            draws: 0,
+            goals: 0,
+            matches: [],
+            morale: 100,
+            energy: 100
+        };
+
+        function startGame() {
+            const teamName = document.getElementById('teamName').value.trim();
+            const goalie = document.getElementById('goalie').value;
+            const captain = document.getElementById('captain').value;
+            const coach = document.getElementById('coach').value;
+
+            if (!teamName || !goalie || !captain || !coach) {
+                alert('Please fill in all fields!');
+                return;
+            }
+
+            gameState.teamName = teamName;
+            gameState.goalie = goalie;
+            gameState.captain = captain;
+            gameState.coach = coach;
+
+            document.getElementById('setupPhase').style.display = 'none';
+            document.getElementById('gamePhase').style.display = 'block';
+
+            updateUI();
+
+            showGameMessage(`
+                <strong>🎉 Welcome to ${teamName}! 🎉</strong><br><br>
+                <strong>Your Squad:</strong><br>
+                ⚽ <strong>Goalie:</strong> ${goalie}<br>
+                👑 <strong>Captain:</strong> ${captain}<br>
+                🏆 <strong>Coach:</strong> ${coach}<br><br>
+                Your team is ready! Play matches to climb the league table and earn glory!
+            `);
+        }
+
+        function playMatch() {
+            const opponents = [
+                { name: 'Liverpool FC', strength: 85 },
+                { name: 'Arsenal', strength: 82 },
+                { name: 'Chelsea', strength: 83 },
+                { name: 'Tottenham', strength: 80 },
+                { name: 'Manchester City', strength: 90 },
+                { name: 'Newcastle', strength: 78 },
+                { name: 'Brighton', strength: 76 },
+                { name: 'Aston Villa', strength: 77 }
+            ];
+
+            const opponent = opponents[Math.floor(Math.random() * opponents.length)];
+            const teamStrength = 75 + (gameState.wins * 2);
+            const yourScore = Math.floor(Math.random() * 5) + (gameState.captain === 'Cristiano Ronaldo' ? 1 : 0);
+            const opponentScore = Math.floor(Math.random() * 4);
+
+            let result = '';
+            let logClass = '';
+
+            if (yourScore > opponentScore) {
+                result = 'WON';
+                gameState.wins++;
+                gameState.goals += yourScore;
+                logClass = 'win';
+            } else if (yourScore < opponentScore) {
+                result = 'LOST';
+                gameState.losses++;
+                logClass = 'loss';
+            } else {
+                result = 'DREW';
+                gameState.draws++;
+                logClass = 'draw';
+            }
+
+            const matchInfo = `${gameState.teamName} ${yourScore} - ${opponentScore} ${opponent.name} (${result})`;
+            gameState.matches.unshift(matchInfo);
+
+            showGameMessage(`
+                <strong>⚽ MATCH RESULT ⚽</strong><br><br>
+                <strong>${gameState.teamName}</strong> vs <strong>${opponent.name}</strong><br><br>
+                <strong>Final Score: ${yourScore} - ${opponentScore}</strong><br>
+                <strong>Result: ${result}!</strong><br><br>
+                📊 <strong>Match Highlights:</strong><br>
+                • Your Captain (${gameState.captain}) played brilliantly<br>
+                • Goalkeeper (${gameState.goalie}) made ${Math.floor(Math.random() * 8) + 3} saves<br>
+                • Coach (${gameState.coach}) made smart substitutions<br><br>
+                Click "VIEW TEAM" or "PLAY MATCH" to continue!
+            `);
+
+            updateUI();
+            addMatchLog(matchInfo, logClass);
+        }
+
+        function viewTeam() {
+            showGameMessage(`
+                <strong>🏆 YOUR TEAM 🏆</strong><br><br>
+                <strong>Team Name:</strong> ${gameState.teamName}<br><br>
+                <strong>Squad:</strong><br>
+                🥅 <strong>Goalie:</strong> ${gameState.goalie}<br>
+                👑 <strong>Captain:</strong> ${gameState.captain}<br>
+                🎯 <strong>Coach:</strong> ${gameState.coach}<br><br>
+                <strong>Stats:</strong><br>
+                🏅 Wins: ${gameState.wins}<br>
+                ❌ Losses: ${gameState.losses}<br>
+                🤝 Draws: ${gameState.draws}<br>
+                ⚽ Total Goals: ${gameState.goals}<br><br>
+                <strong>Rank:</strong> ${calculateRank()}<br>
+                <strong>Morale:</strong> ${gameState.morale}%
+            `);
+        }
+
+        function calculateRank() {
+            const points = gameState.wins * 3 + gameState.draws;
+            if (points >= 30) return '🥇 1st Place (Promotion Contender!)';
+            if (points >= 20) return '🥈 3rd Place (Strong Contender)';
+            if (points >= 10) return '🥉 10th Place (Mid-Table)';
+            return '20th Place (Needs Improvement)';
+        }
+
+        function updateUI() {
+            document.getElementById('displayTeam').textContent = gameState.teamName;
+            document.getElementById('displayRecord').textContent = `${gameState.wins}/${gameState.losses}/${gameState.draws}`;
+            document.getElementById('displayGoals').textContent = gameState.goals;
+            document.getElementById('displayRank').textContent = calculateRank().split(' ')[0];
+        }
+
+        function showGameMessage(message) {
+            document.getElementById('gameContent').innerHTML = `<h2>⚽ Game Update</h2><p>${message}</p>`;
+        }
+
+        function addMatchLog(match, className) {
+            const log = document.getElementById('matchLog');
+            const matchElement = document.createElement('div');
+            matchElement.className = `match-log ${className}`;
+            matchElement.textContent = match;
+            log.insertBefore(matchElement, log.firstChild);
+        }
+
+        function resetGame() {
+            gameState = {
+                teamName: '',
+                goalie: '',
+                captain: '',
+                coach: '',
+                wins: 0,
+                losses: 0,
+                draws: 0,
+                goals: 0,
+                matches: [],
+                morale: 100,
+                energy: 100
+            };
+
+            document.getElementById('setupPhase').style.display = 'block';
+            document.getElementById('gamePhase').style.display = 'none';
+            document.getElementById('teamName').value = '';
+            document.getElementById('goalie').value = '';
+            document.getElementById('captain').value = '';
+            document.getElementById('coach').value = '';
+            document.getElementById('matchLog').innerHTML = '';
+            document.getElementById('gameContent').innerHTML = '<h2>Welcome to Dream League Soccer!</h2><p>Build your dream team and lead them to glory! Let\'s start by setting up your team.</p><p style="margin-top: 20px; color: #ffd700;">Enter your team details below:</p>';
+        }
+    </script>
+</body>
+</html>
